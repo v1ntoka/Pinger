@@ -6,8 +6,6 @@ import (
 )
 
 func main() {
-	test, _ := Parser.NewIP(127, 0, 0, 1)
-	fmt.Println(test)
-	test2, _ := Parser.NewIP(127, 0, 0, 2)
-	fmt.Println(test2.Less(test))
+	rangeIP := "127.0.0.1 - 127.0.0.3"
+	fmt.Println(Parser.Parse(rangeIP))
 }
