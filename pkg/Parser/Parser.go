@@ -1,8 +1,6 @@
 package Parser
 
-import (
-	"strings"
-)
+import "strings"
 
 const (
 	IPTemplate = `^(\d{1,3}\.){3}\d{1,3}$`

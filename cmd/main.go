@@ -1,14 +1,13 @@
 package main
 
 import (
+	"Pnigger/pkg/Parser"
 	"fmt"
-	"net"
 )
 
 func main() {
-	fmt.Println("Hello")
-	testIP := net.IPAddr{
-		net.IPv4(127, 0, 0, 1),
-		"",
-	}
+	test, _ := Parser.NewIP(127, 0, 0, 1)
+	fmt.Println(test)
+	test2, _ := Parser.NewIP(127, 0, 0, 2)
+	fmt.Println(test2.Less(test))
 }

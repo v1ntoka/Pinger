@@ -1,13 +1,10 @@
 package Parser
 
-import "fmt"
+import "strconv"
 
 type IPAddress [4]byte
 
-func New(n1, n2, n3, n4 byte) (*IPAddress, error) {
-	if n1 > 255 || n2 > 255 || n3 > 255 || n4 > 255 {
-		return nil, fmt.Errorf("invalid IP address: values cannot be greater than 255")
-	}
+func NewIP(n1, n2, n3, n4 byte) (*IPAddress, error) {
 	return &IPAddress{n1, n2, n3, n4}, nil
 }
 
@@ -30,5 +27,9 @@ func (ip *IPAddress) Equal(ip2 *IPAddress) bool {
 }
 
 func (ip *IPAddress) String() string {
-	return fmt.Sprintf("%v.%v.%v.%v", ip)
+	res := ""
+	for _, c := range ip {
+		res += strconv.Itoa(int(c)) + "."
+	}
+	return res[:len(res)-1]
 }
