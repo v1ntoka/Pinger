@@ -2,6 +2,7 @@ package Parser
 
 import (
 	"fmt"
+	"net"
 	"regexp"
 	"strconv"
 	"strings"
@@ -11,8 +12,8 @@ const (
 	IPTemplate = `^(\d{1,3}\.){3}\d{1,3}$`
 )
 
-func Parse(s string) ([]IPAddress, error) {
-	res := make([]IPAddress, 0)
+func Parse(s string) ([]net.IPAddr, error) {
+	res := make([]net.IPAddr, 0)
 	parts := strings.Split(s, "-")
 	if len(parts) < 2 {
 		return nil, fmt.Errorf("invalid IP range: %s", s)
@@ -25,13 +26,13 @@ func Parse(s string) ([]IPAddress, error) {
 	if err != nil {
 		return nil, err
 	}
-	if ip.Equal(lastIP) {
+	if Equal(ip, lastIP) {
 		res = append(res, *ip)
 		return res, nil
 	}
-	for ip.Less(lastIP) {
+	for Less(ip, lastIP) {
 		res = append(res, *ip)
-		ip, err = ip.Increment()
+		ip, err = Increment(ip)
 		if err != nil {
 			return nil, err
 		}
@@ -41,11 +42,11 @@ func Parse(s string) ([]IPAddress, error) {
 }
 
 //todo: В будущем планируется сделать возможность вводить как диапазон, так и отдельные адреса
-//func parseRange(s string) *IPAddress {
+//func parseRange(s string) *net.IPAddr {
 //	return nil
 //}
 
-func parseIP(s string) (*IPAddress, error) {
+func parseIP(s string) (*net.IPAddr, error) {
 	s = strings.TrimSpace(s)
 	isCorrect, _ := regexp.MatchString(IPTemplate, s)
 	if !isCorrect {

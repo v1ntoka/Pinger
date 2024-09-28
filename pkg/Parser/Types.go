@@ -2,60 +2,59 @@ package Parser
 
 import (
 	"fmt"
-	"strconv"
+	"log"
+	"net"
 )
 
-type IPAddress [4]byte
-
-func NewIP(n []byte) *IPAddress {
-	res := &IPAddress{}
+func NewIP(n []byte) *net.IPAddr {
+	res := &net.IPAddr{
+		IP: make([]byte, 4),
+	}
 	for i, k := range n {
-		res[i] = k
+		res.IP[i] = k
 	}
 	return res
 }
 
-func (ip *IPAddress) Less(ip2 *IPAddress) bool {
-	for i := range ip {
-		if ip[i] < ip2[i] {
+func Less(ip, ip2 *net.IPAddr) bool {
+	if len(ip.IP) != len(ip2.IP) {
+		log.Fatalf("incorrect ip's to compare: %v and %v", ip, ip2)
+	}
+	for i := range ip.IP {
+		if ip.IP[i] < ip2.IP[i] {
 			return true
 		}
 	}
 	return false
 }
 
-func (ip *IPAddress) Equal(ip2 *IPAddress) bool {
-	for i := range ip {
-		if ip[i] != ip2[i] {
+func Equal(ip, ip2 *net.IPAddr) bool {
+	if len(ip.IP) != len(ip2.IP) {
+		return false
+	}
+	for i := range ip.IP {
+		if ip.IP[i] != ip2.IP[i] {
 			return false
 		}
 	}
 	return true
 }
 
-func (ip *IPAddress) String() string {
-	res := ""
-	for _, c := range ip {
-		res += strconv.Itoa(int(c)) + "."
+func Increment(ip *net.IPAddr) (*net.IPAddr, error) {
+	res := &net.IPAddr{
+		IP: make([]byte, 4),
 	}
-	return res[:len(res)-1]
-}
-
-func (ip *IPAddress) Add(n int) (*IPAddress, error) {
-	res := &IPAddress{}
-	return res, nil
-}
-
-func (ip *IPAddress) Increment() (*IPAddress, error) {
-	res := &IPAddress{}
-	for i, n := range ip {
-		res[i] = n
+	for i, n := range ip.IP {
+		res.IP[i] = n
 	}
 	for i := 3; i >= 0; i-- {
-		if res[i] < 0xff {
-			res[i] = res[i] + 1
+		if res.IP[i] < 0xff {
+			res.IP[i] = res.IP[i] + 1
 			return res, nil
+		} else {
+			res.IP[i] = 0
+			continue
 		}
 	}
-	return nil, fmt.Errorf("end of ip range")
+	return nil, fmt.Errorf("the end of ip range")
 }
