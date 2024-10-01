@@ -1,2 +1,6 @@
 all:
-	go build -C cmd -o ../Pnigger
+	go build -C cmd -o ../Pnigger.out
+
+clear:
+	#rm *.exe
+	rm *.out

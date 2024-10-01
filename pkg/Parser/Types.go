@@ -8,7 +8,7 @@ import (
 
 func NewIP(n []byte) *net.IPAddr {
 	res := &net.IPAddr{
-		IP: make([]byte, 4),
+		IP: make([]byte, 16),
 	}
 	for i, k := range n {
 		res.IP[i] = k
@@ -42,14 +42,14 @@ func Equal(ip, ip2 *net.IPAddr) bool {
 
 func Increment(ip *net.IPAddr) (*net.IPAddr, error) {
 	res := &net.IPAddr{
-		IP: make([]byte, 4),
+		IP: make([]byte, 16),
 	}
 	for i, n := range ip.IP {
 		res.IP[i] = n
 	}
-	for i := 3; i >= 0; i-- {
+	for i := len(res.IP) - 1; i >= 0; i-- {
 		if res.IP[i] < 0xff {
-			res.IP[i] = res.IP[i] + 1
+			res.IP[i] = res.IP[i] + 0x01
 			return res, nil
 		} else {
 			res.IP[i] = 0

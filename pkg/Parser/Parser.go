@@ -3,8 +3,6 @@ package Parser
 import (
 	"fmt"
 	"net"
-	"regexp"
-	"strconv"
 	"strings"
 )
 
@@ -46,23 +44,32 @@ func Parse(s string) ([]net.IPAddr, error) {
 //	return nil
 //}
 
+//func parseIP(s string) (*net.IPAddr, error) {
+//	s = strings.TrimSpace(s)
+//	isCorrect, _ := regexp.MatchString(IPTemplate, s)
+//	if !isCorrect {
+//		return nil, fmt.Errorf("invalid IP address: %s", s)
+//	}
+//	parts := strings.Split(s, `.`)
+//	res := make([]byte, 4)
+//	for i, part := range parts {
+//		number, err := strconv.Atoi(part)
+//		if err != nil {
+//			return nil, err
+//		}
+//		if number > 255 {
+//			return nil, fmt.Errorf("invalid IP address: %s", s)
+//		}
+//		res[i] = byte(number)
+//	}
+//	return NewIP(res), nil
+//}
+
 func parseIP(s string) (*net.IPAddr, error) {
 	s = strings.TrimSpace(s)
-	isCorrect, _ := regexp.MatchString(IPTemplate, s)
-	if !isCorrect {
-		return nil, fmt.Errorf("invalid IP address: %s", s)
+	res, err := net.ResolveIPAddr("ip4:icmp", s)
+	if err != nil {
+		return nil, err
 	}
-	parts := strings.Split(s, `.`)
-	res := make([]byte, 4)
-	for i, part := range parts {
-		number, err := strconv.Atoi(part)
-		if err != nil {
-			return nil, err
-		}
-		if number > 255 {
-			return nil, fmt.Errorf("invalid IP address: %s", s)
-		}
-		res[i] = byte(number)
-	}
-	return NewIP(res), nil
+	return res, nil
 }
