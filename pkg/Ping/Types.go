@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"sync"
+	"time"
 )
 
 func ip2string(ip net.IPAddr) string {
@@ -41,14 +42,17 @@ func NewPinger() *Pinger {
 }
 
 func (p *Pinger) Run() {
-	p.Add(len(p.pool))
 	for s := range p.pool {
-		p.ping(s)
+		go p.ping(s)
 	}
-	p.Wait()
-	for ip, res := range p.pool {
-		fmt.Println(ip, res.Sent, res.Received, res.Percent, res.Err)
-	}
+	go func() {
+		for {
+			for ip, res := range p.pool {
+				fmt.Println(ip, res.Sent, res.Received, res.Percent, res.Err)
+			}
+		}
+	}()
+
 }
 
 func (p *Pinger) AddIPs(addr []net.IPAddr) {
@@ -59,46 +63,53 @@ func (p *Pinger) AddIPs(addr []net.IPAddr) {
 
 func (p *Pinger) ping(ip string) {
 	defer p.Done()
-	c, err := icmp.ListenPacket("ip4:icmp", ip)
+	c, err := icmp.ListenPacket("ip4:icmp", "0.0.0.0")
 	if err != nil {
 		p.pool[ip].Err = err
 		return
 	}
 	defer c.Close()
+	for {
 
-	wm := icmp.Message{
-		Type: ipv4.ICMPTypeEcho, Code: 0,
-		Body: &icmp.Echo{
-			ID: os.Getpid() & 0xffff, Seq: 1,
-			Data: []byte("HELLO-R-U-THERE"),
-		},
-	}
+		wm := icmp.Message{
+			Type: ipv4.ICMPTypeEcho, Code: 0,
+			Body: &icmp.Echo{
+				ID: os.Getpid() & 0xffff, Seq: 1,
+				Data: make([]byte, 32),
+			},
+		}
 
-	wb, err := wm.Marshal(nil)
-	if err != nil {
-		p.pool[ip].Err = err
-		return
-	}
-	if _, err := c.WriteTo(wb, &net.IPAddr{IP: net.ParseIP(ip)}); err != nil {
-		p.pool[ip].Err = err
-		return
-	}
+		wb, err := wm.Marshal(nil)
+		if err != nil {
+			p.pool[ip].Err = err
+			return
+		}
+		if _, err := c.WriteTo(wb, &net.IPAddr{IP: net.ParseIP(ip)}); err != nil {
+			p.pool[ip].Err = err
+			return
+		}
 
-	rb := make([]byte, 1500)
-	n, _, err := c.ReadFrom(rb)
-	if err != nil {
-		p.pool[ip].Err = err
-		return
+		err = c.SetReadDeadline(time.Now().Add(time.Second * 1))
+		if err != nil {
+			fmt.Printf("Error on SetReadDeadline %v", err)
+			panic(err)
+		}
+
+		rb := make([]byte, 1500)
+		n, _, err := c.ReadFrom(rb)
+		if err != nil {
+			p.pool[ip].Err = err
+			return
+		}
+		rm, err := icmp.ParseMessage(ipv4.ICMPTypeEchoReply.Protocol(), rb[:n])
+		if err != nil {
+			p.pool[ip].Err = err
+			return
+		}
+		p.pool[ip].Sent++
+		if rm.Type == ipv4.ICMPTypeEchoReply {
+			p.pool[ip].Received++
+		}
+		p.pool[ip].Percent = float32(p.pool[ip].Sent) * 100 / float32(p.pool[ip].Received)
 	}
-	rm, err := icmp.ParseMessage(ipv4.ICMPTypeEchoReply.Protocol(), rb[:n])
-	if err != nil {
-		p.pool[ip].Err = err
-		return
-	}
-	p.pool[ip].Sent++
-	if rm.Type != ipv4.ICMPTypeEchoReply {
-		p.pool[ip].Received++
-	}
-	p.pool[ip].Percent = float32(p.pool[ip].Sent) * 100 / float32(p.pool[ip].Received)
-	return
 }
