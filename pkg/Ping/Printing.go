@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"time"
 )
 
 func clearLinux() {
@@ -33,14 +34,10 @@ func ConsoleClear() {
 
 func Declare(p *Pinger) {
 	for {
+		time.Sleep(p.Timeout)
 		ConsoleClear()
 		for _, s := range p.Pool {
-			if s.Err == nil {
-				fmt.Println(s.IP.String(), s.Sent, s.Received, s.Percent)
-			} else {
-				fmt.Println(s.IP, s.Err.Error())
-				os.Exit(1)
-			}
+			fmt.Println(s.IP.String(), s.Sent, s.Received, s.Percent)
 		}
 	}
 }

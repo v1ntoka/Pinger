@@ -14,7 +14,9 @@ type Pinger struct {
 }
 
 type stat struct {
+	sync.RWMutex
 	IP       net.IP
+	Index    int
 	Timeout  time.Duration
 	Sent     int64
 	Received int64
@@ -30,10 +32,15 @@ func NewPinger(t time.Duration) *Pinger {
 }
 
 func (p *Pinger) AddIPs(addr []net.IP) {
-	for _, ip := range addr {
+	for i, ip := range addr {
 		p.Pool = append(p.Pool, &stat{
-			IP:      ip,
-			Timeout: p.Timeout,
+			IP:       ip,
+			Index:    i,
+			Timeout:  p.Timeout,
+			Sent:     0,
+			Received: 0,
+			Percent:  0,
+			Err:      nil,
 		})
 	}
 }
@@ -43,5 +50,4 @@ func (p *Pinger) Run() {
 		go Single(s)
 	}
 	Declare(p)
-
 }
