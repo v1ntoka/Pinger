@@ -3,17 +3,20 @@ package main
 import (
 	"Pinger/pkg/Parser"
 	"Pinger/pkg/Ping"
+	"bufio"
 	"log"
+	"os"
 	"time"
 )
 
 func main() {
-	rng := "8.8.8.7-8.8.8.8"
-	ips, err := Parser.Parse(rng)
+	s := bufio.NewScanner(os.Stdin)
+	s.Scan()
+	ips, err := Parser.Parse(s.Text())
 	if err != nil {
 		log.Fatal(err)
 	}
-	p := Ping.NewPinger(time.Second)
+	p := Ping.NewPinger(time.Millisecond, time.Second)
 	p.AddIPs(ips)
 	p.Run()
 }

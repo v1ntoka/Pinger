@@ -7,47 +7,41 @@ import (
 )
 
 type Pinger struct {
-	sync.RWMutex
-	sync.WaitGroup
-	Pool    []*stat
-	Timeout time.Duration
+	Pool      []*stat
+	Timeout   time.Duration
+	PingEvery time.Duration
 }
 
 type stat struct {
 	sync.RWMutex
 	IP       net.IP
 	Index    int
-	Timeout  time.Duration
 	Sent     int64
 	Received int64
 	Percent  float32
 	Err      error
 }
 
-func NewPinger(t time.Duration) *Pinger {
+func NewPinger(t time.Duration, pe time.Duration) *Pinger {
 	return &Pinger{
-		Pool:    make([]*stat, 0),
-		Timeout: t,
+		Pool:      make([]*stat, 0),
+		Timeout:   t,
+		PingEvery: pe,
 	}
 }
 
 func (p *Pinger) AddIPs(addr []net.IP) {
 	for i, ip := range addr {
 		p.Pool = append(p.Pool, &stat{
-			IP:       ip,
-			Index:    i,
-			Timeout:  p.Timeout,
-			Sent:     0,
-			Received: 0,
-			Percent:  0,
-			Err:      nil,
+			IP:    ip,
+			Index: i,
 		})
 	}
 }
 
 func (p *Pinger) Run() {
 	for _, s := range p.Pool {
-		go Single(s)
+		go Single(s, p.PingEvery, p.Timeout)
 	}
 	Declare(p)
 }

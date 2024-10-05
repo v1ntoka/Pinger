@@ -1,6 +1,7 @@
 package Ping
 
 import (
+	"errors"
 	"fmt"
 	"golang.org/x/net/icmp"
 	"golang.org/x/net/ipv4"
@@ -9,7 +10,7 @@ import (
 	"time"
 )
 
-func Single(s *stat) {
+func Single(s *stat, pe time.Duration, to time.Duration) {
 	c, err := icmp.ListenPacket("ip4:icmp", fmt.Sprintf("0.0.0.0"))
 	defer c.Close()
 	if err != nil {
@@ -17,7 +18,7 @@ func Single(s *stat) {
 		return
 	}
 	for {
-		time.Sleep(s.Timeout)
+		time.Sleep(pe)
 		s.Sent++
 		wm := icmp.Message{
 			Type: ipv4.ICMPTypeEcho, Code: 0,
@@ -37,7 +38,7 @@ func Single(s *stat) {
 			s.Err = err
 			return
 		}
-		err = c.SetReadDeadline(time.Now().Add(s.Timeout))
+		err = c.SetReadDeadline(time.Now().Add(to))
 		if err != nil {
 			s.Err = err
 			return
@@ -45,8 +46,12 @@ func Single(s *stat) {
 		rb := make([]byte, 1500)
 		n, _, err := c.ReadFrom(rb)
 		if err != nil {
-			s.Err = err
-			return
+			if errors.Is(err, os.ErrDeadlineExceeded) {
+				continue
+			} else {
+				s.Err = err
+				return
+			}
 		}
 		rm, err := icmp.ParseMessage(ipv4.ICMPTypeEchoReply.Protocol(), rb[:n])
 		if err != nil {

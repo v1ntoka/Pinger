@@ -34,10 +34,14 @@ func ConsoleClear() {
 
 func Declare(p *Pinger) {
 	for {
-		time.Sleep(p.Timeout)
+		time.Sleep(p.PingEvery)
 		ConsoleClear()
 		for _, s := range p.Pool {
-			fmt.Println(s.IP.String(), s.Sent, s.Received, s.Percent)
+			if s.Err == nil {
+				fmt.Println(s.IP, s.Sent, s.Received, s.Percent)
+			} else {
+				fmt.Println(s.IP, s.Err.Error())
+			}
 		}
 	}
 }
