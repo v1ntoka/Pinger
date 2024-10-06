@@ -16,7 +16,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	p := Ping.NewPinger(time.Millisecond, time.Second)
+	p := Ping.NewPinger(500*time.Millisecond, time.Second)
 	p.AddIPs(ips)
 	p.Run()
 }

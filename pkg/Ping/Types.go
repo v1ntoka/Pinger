@@ -13,7 +13,7 @@ type Pinger struct {
 }
 
 type stat struct {
-	sync.RWMutex
+	sync.Mutex
 	IP       net.IP
 	Index    int
 	Sent     int64

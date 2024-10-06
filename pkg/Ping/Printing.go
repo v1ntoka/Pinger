@@ -37,11 +37,13 @@ func Declare(p *Pinger) {
 		time.Sleep(p.PingEvery)
 		ConsoleClear()
 		for _, s := range p.Pool {
+			s.Lock()
 			if s.Err == nil {
 				fmt.Println(s.IP, s.Sent, s.Received, s.Percent)
 			} else {
 				fmt.Println(s.IP, s.Err.Error())
 			}
+			s.Unlock()
 		}
 	}
 }

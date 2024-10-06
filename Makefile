@@ -1,7 +1,8 @@
-NAME = Pnigger
+NAME = Pinger
+
 
 all:
-	go build -C cmd -o ../$(NAME).out
+	GOOS=linux GOARCH=amd64 go build -C cmd -o ../$(NAME).out
 
 clear:
 	#rm *.exe
@@ -9,3 +10,6 @@ clear:
 
 race:
 	go build -C cmd --race -o ../$(NAME)_race.out
+
+win:
+	GOOS=windows GOARCH=amd64 go build -C cmd -o ../$(NAME).exe
