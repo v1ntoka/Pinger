@@ -40,8 +40,11 @@ func (p *Pinger) AddIPs(addr []net.IP) {
 }
 
 func (p *Pinger) Run() {
-	for _, s := range p.Pool {
-		go Single(s, p.PingEvery, p.Timeout)
+	for {
+		for _, s := range p.Pool {
+			go Single(s, p.PingEvery, p.Timeout)
+		}
+		time.Sleep(p.PingEvery)
+		Declare(p)
 	}
-	Declare(p)
 }

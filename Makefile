@@ -13,3 +13,6 @@ race:
 
 win:
 	GOOS=windows GOARCH=amd64 go build -C cmd -o ../$(NAME).exe
+
+pprof:
+	go tool pprof http://localhost:8080/debug/pprof/heap
